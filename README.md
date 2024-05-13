@@ -1,7 +1,7 @@
 # Schaferct
 This is the offical repo of team **Schaferct** in [2nd Bandwidth Prediction of MMSys'24](https://www.microsoft.com/en-us/research/academic-program/bandwidth-estimation-challenge/overview/). 
 
-You can find the full paper at [here](https://dl.acm.org/doi/10.1145/3625468.3652183)
+You can find the full paper [here](https://dl.acm.org/doi/10.1145/3625468.3652183)
 
 ## Datasets
 
