@@ -22,7 +22,8 @@ import json
 import onnxruntime as ort
 
 TensorBatch = List[torch.Tensor]
-pickle_path = '../training_dataset_pickle/v8.pickle'
+
+pickle_path = '/content/drive/MyDrive/Colab Notebooks/v8.pickle'
 evaluation_dataset_path = '../ALLdatasets/evaluate'
 ENUM = 20  # every 5 evaluation set
 small_evaluation_datasets = []
@@ -159,7 +160,7 @@ def wandb_init(config: dict) -> None:
         name=config["name"],
         id=str(uuid.uuid4()),
     )
-    wandb.run.save()
+    # wandb.run.save()
 
 def asymmetric_l2_loss(u: torch.Tensor, tau: float) -> torch.Tensor:
     return torch.mean(torch.abs(tau - (u < 0).float()) * u**2)
@@ -541,7 +542,7 @@ class ImplicitQLearning:
 
 def get_input_from_file():
     # dummy -> real input
-    evaluation_file = '../evaluation/data/02560.json'
+    evaluation_file = '../ALLdatasets/evaluate/data/02560.json'
     with open(evaluation_file, "r") as file:
         call_data = json.load(file)
     observations = np.asarray(call_data['observations'], dtype=np.float32)
