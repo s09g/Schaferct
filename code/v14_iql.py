@@ -10,7 +10,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from tqdm import tqdm
 
 import numpy as np
-import pyrallis
+# import pyrallis
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -642,7 +642,7 @@ def evaluate(onnx_path):
     return np.mean(every_call_mse), np.mean(every_call_accuracy)
     
 
-@pyrallis.wrap()
+# @pyrallis.wrap()
 def train(config: TrainConfig):
     collect_log_dict = []
     state_dim = STATE_DIM
@@ -665,8 +665,9 @@ def train(config: TrainConfig):
     if config.checkpoints_path is not None:
         print(f"Checkpoints path: {config.checkpoints_path}")
         os.makedirs(config.checkpoints_path, exist_ok=True)
+        import json
         with open(os.path.join(config.checkpoints_path, "config.yaml"), "w") as f:
-            pyrallis.dump(config, f)
+            json.dump(config, f)
 
     # Set seeds
     seed = config.seed
