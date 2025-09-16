@@ -1,9 +1,9 @@
 matplotlib
 numpy
-onnx
-onnxruntime
 pandas
 pyrallis
 scikit_learn
 torch
 tqdm
+onnx
+onnxruntime

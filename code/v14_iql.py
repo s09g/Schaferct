@@ -24,7 +24,7 @@ import onnxruntime as ort
 TensorBatch = List[torch.Tensor]
 
 pickle_path = '/content/drive/MyDrive/Colab Notebooks/v8.pickle'
-evaluation_dataset_path = '../ALLdatasets/evaluate'
+evaluation_dataset_path = '/content/Schaferct/ALLdatasets/evaluate'
 ENUM = 20  # every 5 evaluation set
 small_evaluation_datasets = []
 policy_dir_names = os.listdir(evaluation_dataset_path)
