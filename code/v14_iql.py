@@ -719,7 +719,7 @@ def train(config: TrainConfig):
     # if USE_WANDB:
     #     wandb_init(asdict(config))
 
-    for t in range(int(config.max_timesteps)):
+    for t in range(200_000):
         batch = replay_buffer.sample(config.batch_size)
         batch = [b.to(config.device) for b in batch]
         log_dict = trainer.train(batch)
