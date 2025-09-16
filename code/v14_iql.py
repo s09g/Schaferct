@@ -35,7 +35,7 @@ for p_t in policy_dir_names:
         small_evaluation_datasets.append(e_f_path)
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-USE_WANDB = 1
+USE_WANDB = 0
 b_in_Mb = 1e6
 
 MAX_ACTION = 20  # Mbps
@@ -644,6 +644,7 @@ def evaluate(onnx_path):
 
 @pyrallis.wrap()
 def train(config: TrainConfig):
+    collect_log_dict = []
     state_dim = STATE_DIM
     action_dim = ACTION_DIM
 
@@ -715,15 +716,16 @@ def train(config: TrainConfig):
         trainer.load_state_dict(torch.load(policy_file))
         actor = trainer.actor
 
-    if USE_WANDB:
-        wandb_init(asdict(config))
+    # if USE_WANDB:
+    #     wandb_init(asdict(config))
 
     for t in range(int(config.max_timesteps)):
         batch = replay_buffer.sample(config.batch_size)
         batch = [b.to(config.device) for b in batch]
         log_dict = trainer.train(batch)
-        if USE_WANDB:
-            wandb.log(log_dict, step=trainer.total_it)
+        collect_log_dict.append(log_dict.copy())
+        # if USE_WANDB:
+        #     wandb.log(log_dict, step=trainer.total_it)
         # Evaluate episode
         if (t + 1) % config.eval_freq == 0:
             print(f"Time steps: {t + 1}")
@@ -737,9 +739,77 @@ def train(config: TrainConfig):
             export2onnx(pt_path, onnx_path)
             # evaluate
             mse_, accuracy_ = evaluate(onnx_path)
-            if USE_WANDB and trainer.total_it > 1000:
-                wandb.log({"mse": mse_, "error_rate": 1 - accuracy_}, step=trainer.total_it)
+            # if USE_WANDB and trainer.total_it > 1000:
+            #     wandb.log({"mse": mse_, "error_rate": 1 - accuracy_}, step=trainer.total_it)
+    return collect_log_dict
 
+
+def plot_training_metrics(collect_log_dict):
+    import matplotlib.pyplot as plt
+    # Extract different metrics from each log dict into separate lists
+    value_loss = [log_dict["value_loss"] for log_dict in collect_log_dict]
+    q_score = [log_dict["q_score"] for log_dict in collect_log_dict]
+    q_loss = [log_dict["q_loss"] for log_dict in collect_log_dict]
+    actor_all_loss = [log_dict["actor_all_loss"] for log_dict in collect_log_dict]
+    mean_action = [log_dict["mean_action"] for log_dict in collect_log_dict]
+    std_action = [log_dict["std_action"] for log_dict in collect_log_dict]
+    mean_exp_adv = [log_dict["mean_exp_adv"] for log_dict in collect_log_dict]
+
+    # Create a figure and subplot
+    fig, axs = plt.subplots(4, 2, figsize=(14, 16))
+
+    # Plot each metric
+    axs[0, 0].plot(value_loss, label='Value Loss')
+    axs[0, 0].set_title('Value Loss')
+    axs[0, 0].set_xlabel('Training Steps')
+    axs[0, 0].set_ylabel('Loss')
+    axs[0, 0].legend()
+
+    axs[0, 1].plot(q_score, label='Q Score')
+    axs[0, 1].set_title('Q Score')
+    axs[0, 1].set_xlabel('Training Steps')
+    axs[0, 1].set_ylabel('Score')
+    axs[0, 1].legend()
+
+    axs[1, 0].plot(q_loss, label='Q Loss')
+    axs[1, 0].set_title('Q Loss')
+    axs[1, 0].set_xlabel('Training Steps')
+    axs[1, 0].set_ylabel('Loss')
+    axs[1, 0].legend()
+
+    axs[1, 1].plot(actor_all_loss, label='Actor All Loss')
+    axs[1, 1].set_title('Actor All Loss')
+    axs[1, 1].set_xlabel('Training Steps')
+    axs[1, 1].set_ylabel('Loss')
+    axs[1, 1].legend()
+
+    axs[2, 0].plot(mean_action, label='Mean Action')
+    axs[2, 0].set_title('Mean Action')
+    axs[2, 0].set_xlabel('Training Steps')
+    axs[2, 0].set_ylabel('Mean Action Value')
+    axs[2, 0].legend()
+
+    axs[2, 1].plot(std_action, label='Std Action')
+    axs[2, 1].set_title('Std Action')
+    axs[2, 1].set_xlabel('Training Steps')
+    axs[2, 1].set_ylabel('Standard Deviation')
+    axs[2, 1].legend()
+
+    axs[3, 0].plot(mean_exp_adv, label='Mean Exp Adv')
+    axs[3, 0].set_title('Mean Exp Advantage')
+    axs[3, 0].set_xlabel('Training Steps')
+    axs[3, 0].set_ylabel('Advantage')
+    axs[3, 0].legend()
+
+    # Hide unused subplot
+    axs[3, 1].axis('off')
+
+    # Improve layout
+    fig.tight_layout()
+    plt.show()
 
 if __name__ == "__main__":
-    train()
+    collect_log_dict = train()
+    test_list = [item for idx, item in enumerate(collect_log_dict) if idx % 100 == 99]
+    plot_training_metrics(test_list)
+    
